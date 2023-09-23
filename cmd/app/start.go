@@ -10,21 +10,21 @@ import (
 	"test-task/internal/adapters/web"
 	http2 "test-task/internal/controller/http"
 	"test-task/internal/controller/kafka"
-	"test-task/internal/domain/enrichment"
+	"test-task/internal/domain/user"
 	"time"
 )
 
 func NewEnrichment() (kafka.Kafka, http2.Handler) {
 	l := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSource: true})).WithGroup("enrichment_domain")
 
-	storage := postgresdb.NewEnrichmentStorage(db.Connection, l)
+	storage := postgresdb.NewUserStorage(db.Connection, l)
 	router := web.NewRouter(l)
 
-	enrichmentService := enrichment.NewEnrichmentService(storage, router, l)
-	enrichmentUseCase := enrichment.NewEnrichmentUseCase(enrichmentService, l)
+	enrichmentService := user.NewUserService(storage, router, l)
+	enrichmentUseCase := user.NewUserUseCase(enrichmentService, l)
 
-	kafkaHandler := kafka.NewEnrichmentKafka(enrichmentUseCase, l)
-	httpHandler := http2.NewEnrichmentHandler(enrichmentUseCase, l)
+	kafkaHandler := kafka.NewUserKafka(enrichmentUseCase, l)
+	httpHandler := http2.NewUserHandler(enrichmentUseCase, l)
 
 	return kafkaHandler, httpHandler
 }

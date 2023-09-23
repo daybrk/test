@@ -7,11 +7,11 @@ import (
 	"github.com/segmentio/kafka-go"
 	"log/slog"
 	"test-task/internal/controller"
-	"test-task/internal/domain/enrichment"
+	"test-task/internal/domain/user"
 )
 
 type UseCaseKafka interface {
-	Enrichment(fio enrichment.Fio) error
+	Enrichment(fio user.User) error
 }
 
 type Kafka struct {
@@ -19,8 +19,8 @@ type Kafka struct {
 	log     *slog.Logger
 }
 
-func NewEnrichmentKafka(useCase UseCaseKafka, log *slog.Logger) Kafka {
-	fmt.Println("NewEnrichmentKafka")
+func NewUserKafka(useCase UseCaseKafka, log *slog.Logger) Kafka {
+	fmt.Println("NewUserKafka")
 	return Kafka{useCase: useCase, log: log}
 }
 
@@ -37,14 +37,14 @@ func (k Kafka) Start() {
 			continue
 		}
 
-		var fio controller.Fio
+		var fio controller.User
 		err = json.Unmarshal(message.Value, &fio)
 		if err != nil {
 			k.log.Warn("Не удалось unmarshal данных", slog.String("err", err.Error()))
 			continue
 		}
 
-		err = k.useCase.Enrichment(enrichment.Fio{
+		err = k.useCase.Enrichment(user.User{
 			Name:       fio.Name,
 			Surname:    fio.Surname,
 			Patronymic: fio.Patronymic,

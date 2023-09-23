@@ -1,16 +1,16 @@
 package controller
 
-type Fio struct {
+type User struct {
 	Name       string `json:"name"`
 	Surname    string `json:"surname"`
 	Patronymic string `json:"patronymic"`
 }
 
-type DeleteFio struct {
+type DeleteUser struct {
 	Id int `json:"id"`
 }
 
-type ModifyFio struct {
+type ModifyUser struct {
 	Id          int      `json:"id"`
 	Name        string   `json:"name"`
 	Surname     string   `json:"surname"`

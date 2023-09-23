@@ -1,12 +1,13 @@
-package enrichment
+package user
 
-type Fio struct {
+type User struct {
 	Name       string
 	Surname    string
 	Patronymic string
 }
 
-type FioEnrichment struct {
+type EnrichmentUser struct {
+	Id          int
 	Name        string
 	Surname     string
 	Patronymic  string

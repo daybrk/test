@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"test-task/internal/controller"
-	"test-task/internal/domain/enrichment"
+	"test-task/internal/domain/user"
 )
 
 type UseCaseHandler interface {
-	Enrichment(fio enrichment.Fio) error
+	Enrichment(fio user.User) error
 	DeleteUser(id int) error
-	ModifyUser() error
+	ModifyUser(enrichmentFio user.EnrichmentUser) error
 }
 
 type Handler struct {
@@ -19,7 +20,7 @@ type Handler struct {
 	log     *slog.Logger
 }
 
-func NewEnrichmentHandler(useCase UseCaseHandler, log *slog.Logger) Handler {
+func NewUserHandler(useCase UseCaseHandler, log *slog.Logger) Handler {
 	return Handler{useCase: useCase, log: log}
 }
 
@@ -33,7 +34,7 @@ func (uh Handler) Register(mux *http.ServeMux) {
 func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var fio controller.Fio
+		var fio controller.User
 		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
 			uh.log.Error("не удалось получить данные с клиента", slog.String("err", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
@@ -41,7 +42,9 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err := uh.useCase.Enrichment(enrichment.Fio{
+		uh.log.Info("Начато обогащение и добавление пользователя в базу", slog.Any("user", fio))
+
+		err := uh.useCase.Enrichment(user.User{
 			Name:       fio.Name,
 			Surname:    fio.Surname,
 			Patronymic: fio.Patronymic,
@@ -53,7 +56,7 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uh.log.Info("Получилось")
+		uh.log.Info("обогащение и добавление пользователя в базу закончилось")
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -62,30 +65,37 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 func (uh Handler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var fio controller.DeleteFio
-		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
-			uh.log.Error("не удалось получить данные с клиента", slog.String("err", err.Error()))
+		id, err := strconv.Atoi(r.URL.Query().Get("id"))
+		if err != nil {
+			uh.log.Error("ошибка при конвертации id в int", slog.String("err", err.Error()))
+		}
+
+		if id == 0 {
+			uh.log.Error("ошибка в отправляемых данных id = 0")
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
 		}
-		//err := uh.useCase.DeleteUser()
-		//if err != nil {
-		//	uh.log.Error("Ошибка", slog.String("err", err.Error()))
-		//	http.Error(w, "", http.StatusInternalServerError)
-		//
-		//	return
-		//}
+
+		err = uh.useCase.DeleteUser(id)
+		if err != nil {
+			uh.log.Error("ошибка при удалении пользователя", slog.String("err", err.Error()))
+			http.Error(w, "", http.StatusInternalServerError)
+
+			return
+		}
 
 		uh.log.Info("Получилось")
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// TODO
 func (uh Handler) ModifyUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var fio controller.ModifyFio
+		var fio controller.ModifyUser
 		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
 			uh.log.Error("не удалось получить данные с клиента", slog.String("err", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
@@ -93,7 +103,22 @@ func (uh Handler) ModifyUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err := uh.useCase.ModifyUser()
+		if fio.Id == 0 {
+			uh.log.Error("ошибка в отправляемых данных id = 0")
+			http.Error(w, "", http.StatusInternalServerError)
+
+			return
+		}
+
+		err := uh.useCase.ModifyUser(user.EnrichmentUser{
+			Id:          fio.Id,
+			Name:        fio.Name,
+			Surname:     fio.Surname,
+			Patronymic:  fio.Patronymic,
+			Age:         fio.Age,
+			Gender:      fio.Gender,
+			Nationality: fio.Nationality,
+		})
 		if err != nil {
 			uh.log.Error("Ошибка", slog.String("err", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
