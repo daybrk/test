@@ -1,0 +1,17 @@
+# gqlgen.yml
+
+# Схема GraphQL
+schema: schema.graphql
+
+# Пакет, в котором будут сгенерированы файлы
+exec:
+  filename: generated.go
+
+# Место, где будут сгенерированы файлы
+model:
+  filename: models_gen.go
+
+# Ваши резолверы (функции, которые реализуют логику запросов)
+resolver:
+  filename: resolver.go
+  type: Resolver

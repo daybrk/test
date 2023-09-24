@@ -1,0 +1,36 @@
+input User  {
+    name   :     String!
+    surname :    String!
+    patronymic:  String!
+}
+
+input DeleteUser  {
+    id : Int!
+}
+
+input ModifyUser  {
+    id:         Int!
+    name:       String!
+    surname:    String!
+    patronymic:   String!
+    age:    Int!
+    gender:    String!
+    nationality:  [String!]!
+}
+
+type Result {
+    success: Boolean!
+    message: String
+    error: ResultError
+}
+
+type ResultError {
+    code: Int!
+    message: String!
+}
+
+type Mutation {
+    addUser(input: User!): Result!
+    deleteUser(input: DeleteUser!): Result!
+    modifyUser(input: ModifyUser!): Result!
+}

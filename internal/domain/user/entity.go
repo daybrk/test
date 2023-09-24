@@ -15,3 +15,13 @@ type EnrichmentUser struct {
 	Gender      string
 	Nationality []string
 }
+
+type Filter struct {
+	Id          int
+	Name        *string
+	Surname     *string
+	Patronymic  *string
+	Age         *int
+	Gender      *string
+	Nationality *[]string
+}

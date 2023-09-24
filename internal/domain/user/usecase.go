@@ -14,16 +14,16 @@ type Service interface {
 	ModifyUser(enrichmentUser EnrichmentUser) error
 }
 
-type enrichmentUseCase struct {
+type userUseCase struct {
 	service Service
 	log     *slog.Logger
 }
 
-func NewUserUseCase(service Service, log *slog.Logger) *enrichmentUseCase {
-	return &enrichmentUseCase{service: service, log: log}
+func NewUserUseCase(service Service, log *slog.Logger) *userUseCase {
+	return &userUseCase{service: service, log: log}
 }
 
-func (uc enrichmentUseCase) Enrichment(user User) error {
+func (uc userUseCase) Enrichment(user User) error {
 	if uc.service.Validation(&user, nil) == false {
 		uc.log.Info("Неправильные данные")
 		//TODO: ошибка нужна
@@ -49,7 +49,7 @@ func (uc enrichmentUseCase) Enrichment(user User) error {
 	return nil
 }
 
-func (uc enrichmentUseCase) DeleteUser(id int) error {
+func (uc userUseCase) DeleteUser(id int) error {
 	if exist, err := uc.service.CheckUserExist(id); err == nil {
 		if !exist {
 			uc.log.Warn("пользователь не существует")
@@ -75,7 +75,7 @@ func (uc enrichmentUseCase) DeleteUser(id int) error {
 	return nil
 }
 
-func (uc enrichmentUseCase) ModifyUser(enrichmentUser EnrichmentUser) error {
+func (uc userUseCase) ModifyUser(enrichmentUser EnrichmentUser) error {
 	if exist, err := uc.service.CheckUserExist(enrichmentUser.Id); err == nil {
 		if !exist {
 			uc.log.Warn("пользователь не существует")

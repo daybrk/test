@@ -9,18 +9,18 @@ import (
 	"test-task/internal/domain/user"
 )
 
-type UseCaseHandler interface {
+type UseCase interface {
 	Enrichment(fio user.User) error
 	DeleteUser(id int) error
 	ModifyUser(enrichmentFio user.EnrichmentUser) error
 }
 
 type Handler struct {
-	useCase UseCaseHandler
+	useCase UseCase
 	log     *slog.Logger
 }
 
-func NewUserHandler(useCase UseCaseHandler, log *slog.Logger) Handler {
+func NewUserHandler(useCase UseCase, log *slog.Logger) Handler {
 	return Handler{useCase: useCase, log: log}
 }
 

@@ -3,24 +3,22 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log/slog"
 	"test-task/internal/controller"
 	"test-task/internal/domain/user"
 )
 
-type UseCaseKafka interface {
+type UseCase interface {
 	Enrichment(fio user.User) error
 }
 
 type Kafka struct {
-	useCase UseCaseKafka
+	useCase UseCase
 	log     *slog.Logger
 }
 
-func NewUserKafka(useCase UseCaseKafka, log *slog.Logger) Kafka {
-	fmt.Println("NewUserKafka")
+func NewUserKafka(useCase UseCase, log *slog.Logger) Kafka {
 	return Kafka{useCase: useCase, log: log}
 }
 
