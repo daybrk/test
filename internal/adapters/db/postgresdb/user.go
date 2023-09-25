@@ -22,11 +22,11 @@ func (s storage) Insert(user EnrichmentUser) error {
 	nationalityArray := "{" + strings.Join(user.Nationality, ",") + "}"
 
 	_, err := s.db.Exec(`
-		INSERT INTO main.user(name, surname, patronymic, age, gender, nationality)
+		INSERT INTO public.user(name, surname, patronymic, age, gender, nationality)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`, user.Name, user.Surname, user.Patronymic, user.Age, user.Gender, nationalityArray)
 	if err != nil {
-		s.log.Error("ошибка при исполнении запроса", slog.String("err", err.Error()))
+		s.log.Error("ошибка при выполнении запроса", slog.String("err", err.Error()))
 
 		return err
 	}
@@ -36,9 +36,9 @@ func (s storage) Insert(user EnrichmentUser) error {
 
 func (s storage) DeleteUser(id int) error {
 	ex, err := s.db.Exec(`
-		DELETE FROM main.user WHERE id = $1`, id)
+		DELETE FROM public.user WHERE id = $1`, id)
 	if err != nil {
-		s.log.Error("ошибка при исполнении запроса", slog.String("err", err.Error()))
+		s.log.Error("ошибка при выполнении запроса", slog.String("err", err.Error()))
 
 		return err
 	}
@@ -56,9 +56,9 @@ func (s storage) DeleteUser(id int) error {
 
 func (s storage) UserExist(id int) error {
 	r, err := s.db.Exec(`
-		Select 1 FROM main.user WHERE id = $1`, id)
+		Select 1 FROM public.user WHERE id = $1`, id)
 	if err != nil {
-		s.log.Error("ошибка при исполнении запроса", slog.String("err", err.Error()))
+		s.log.Error("ошибка при выполнении запроса", slog.String("err", err.Error()))
 
 		return err
 	}
@@ -78,10 +78,10 @@ func (s storage) EditUser(user EnrichmentUser) error {
 	nationalityArray := "{" + strings.Join(user.Nationality, ",") + "}"
 
 	_, err := s.db.Exec(`
-		UPDATE  main.user Set name = $1, surname = $2, patronymic = $3, age = $4, gender = $5, nationality = $6
+		UPDATE  public.user Set name = $1, surname = $2, patronymic = $3, age = $4, gender = $5, nationality = $6
 		WHERE id = $7`, user.Name, user.Surname, user.Patronymic, user.Age, user.Gender, nationalityArray, user.Id)
 	if err != nil {
-		s.log.Error("ошибка при исполнении запроса", slog.String("err", err.Error()))
+		s.log.Error("ошибка при выполнении запроса", slog.String("err", err.Error()))
 
 		return err
 	}
@@ -98,7 +98,7 @@ func (s storage) FilteredUsers(filter Filter) ([]EnrichmentUser, error) {
 
 	r, err := s.db.Query(`
 		Select * 
-		FROM main.user 
+		FROM public.user 
 		WHERE (name = $1 OR $1 IS NULL)
 		  AND (surname = $2 OR $2 IS NULL)
 		  AND (patronymic = $3 OR $3 IS NULL)
@@ -109,7 +109,7 @@ func (s storage) FilteredUsers(filter Filter) ([]EnrichmentUser, error) {
 		filter.Patronymic, filter.Age,
 		filter.Gender, nationalityArray)
 	if err != nil {
-		s.log.Error("ошибка при исполнении запроса", slog.String("err", err.Error()))
+		s.log.Error("ошибка при выполнении запроса", slog.String("err", err.Error()))
 
 		return nil, err
 	}

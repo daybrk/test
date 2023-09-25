@@ -50,7 +50,6 @@ func (k Kafka) Start() {
 			Patronymic: fio.Patronymic,
 		})
 		if errors.Is(err, errs.FioFailedErr) {
-			// Отправить ответное сообщение "FIOFAILED" в Kafka
 			err = k.sendResponseMessage("FIOFAILED")
 			if err != nil {
 				k.log.Warn("Не удалось отправить ответное сообщение", slog.String("errs", err.Error()))
@@ -72,7 +71,7 @@ func (k Kafka) Start() {
 func (k Kafka) sendResponseMessage(response string) error {
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{"localhost:9092"},
-		Topic:   "response-topic", // Замените на соответствующую тему для ответных сообщений
+		Topic:   "my-topic",
 	})
 
 	defer writer.Close()

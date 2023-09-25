@@ -11,10 +11,10 @@ type EnrichmentUser struct {
 }
 
 type Filter struct {
-	Name        *string
-	Surname     *string
-	Patronymic  *string
-	Age         *int
-	Gender      *string
-	Nationality []string
+	Name        *string  `db:"name"`
+	Surname     *string  `db:"surname"`
+	Patronymic  *string  `db:"patronymic"`
+	Age         *int     `db:"age"`
+	Gender      *string  `db:"gender"`
+	Nationality []string `db:"nationality"`
 }

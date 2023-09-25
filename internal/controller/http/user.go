@@ -43,8 +43,6 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uh.log.Info("Начато обогащение и добавление пользователя в базу", slog.Any("user", fio))
-
 		err := uh.useCase.Enrichment(user.User{
 			Name:       fio.Name,
 			Surname:    fio.Surname,
@@ -56,8 +54,6 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
-
-		uh.log.Info("обогащение и добавление пользователя в базу закончилось")
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -85,8 +81,6 @@ func (uh Handler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
-
-		uh.log.Info("Успешно")
 
 		w.WriteHeader(http.StatusOK)
 	}
@@ -126,8 +120,6 @@ func (uh Handler) ModifyUser() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uh.log.Info("Успешно")
-
 		w.WriteHeader(http.StatusOK)
 	}
 }
@@ -164,7 +156,5 @@ func (uh Handler) FilteredUsers() func(w http.ResponseWriter, r *http.Request) {
 
 			return
 		}
-
-		uh.log.Info("Успешно")
 	}
 }

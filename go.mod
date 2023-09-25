@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/99designs/gqlgen v0.17.38
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/lib/pq v1.2.0
 	github.com/segmentio/kafka-go v0.4.42
 	github.com/vektah/gqlparser/v2 v2.5.10
 )

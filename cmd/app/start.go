@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,15 +12,16 @@ import (
 	"test-task/internal/adapters/web"
 	"test-task/internal/controller/graphQL"
 	http2 "test-task/internal/controller/http"
+	"test-task/internal/controller/kafka"
 	"test-task/internal/domain/user"
 	"time"
 )
 
 func NewUser(mux *http.ServeMux) {
 	l := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
-	postgres, err := db.ConnectToPostgres()
+	postgres, err := db.ConnectToPostgres(l)
 	if err != nil {
-		fmt.Println(err)
+		l.Error("Ошибка при подключении к базе данных", slog.String("err", err.Error()))
 
 		return
 	}
@@ -34,15 +34,15 @@ func NewUser(mux *http.ServeMux) {
 
 	srv := handler.NewDefaultServer(
 		graphQL.NewExecutableSchema(graphQL.Config{Resolvers: graphQL.NewUserResolver(userUseCase, l)}))
-	//kafkaHandler := kafka.NewUserKafka(userUseCase, l)
+	kafkaHandler := kafka.NewUserKafka(userUseCase, l)
 	httpHandler := http2.NewUserHandler(userUseCase, l)
 
-	//go kafkaHandler.Start()
+	go kafkaHandler.Start()
 	httpHandler.Register(mux)
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:8082/ for GraphQL playground")
+	l.Info("connect to http://localhost:8082/ for GraphQL playground")
 }
 
 func Run(addr string) <-chan struct{} {

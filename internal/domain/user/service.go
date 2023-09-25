@@ -36,13 +36,13 @@ func NewUserService(storage Storage, router Router, log *slog.Logger) *userServi
 func (e userService) Validation(fio *User, enrichmentFio *EnrichmentUser) bool {
 	if fio != nil {
 		if fio.Name == "" || hasCyrillic(fio.Name) {
-			e.log.Warn("Отсутсвет необходимое поле Name")
+			e.log.Warn("Неправильно заполненное поле Name", slog.String("name", fio.Name))
 
 			return false
 		}
 
 		if fio.Surname == "" || hasCyrillic(fio.Surname) {
-			e.log.Warn("Отсутсвет необходимое поле Surname")
+			e.log.Warn("Неправильно заполненное поле Surname", slog.String("name", fio.Name))
 
 			return false
 		}
@@ -50,25 +50,26 @@ func (e userService) Validation(fio *User, enrichmentFio *EnrichmentUser) bool {
 
 	if enrichmentFio != nil {
 		if enrichmentFio.Name == "" || hasCyrillic(enrichmentFio.Name) {
-			e.log.Warn("Неправильно заполненное поле Name")
+			e.log.Warn("Неправильно заполненное поле Name", slog.String("name", enrichmentFio.Name))
 
 			return false
 		}
 
 		if enrichmentFio.Surname == "" || hasCyrillic(enrichmentFio.Surname) {
-			e.log.Warn("Неправильно заполненное поле Surname")
+			e.log.Warn("Неправильно заполненное поле Surname", slog.String("surname", enrichmentFio.Name))
 
 			return false
 		}
 
 		if enrichmentFio.Gender == "" || hasCyrillic(enrichmentFio.Gender) {
-			e.log.Warn("Неправильно заполненное поле Gender")
+			e.log.Warn("Неправильно заполненное поле Gender", slog.String("gender", enrichmentFio.Gender))
 
 			return false
 		}
 
 		if enrichmentFio.Nationality == nil {
-			e.log.Warn("Неправильно заполненное поле Nationality")
+			e.log.Warn("Неправильно заполненное поле Nationality",
+				slog.Any("nationality", enrichmentFio.Nationality))
 
 			return false
 		}
@@ -83,6 +84,7 @@ func (e userService) EnrichmentAPI(fio User) (EnrichmentUser, error) {
 	enrichmentFIO.Surname = fio.Surname
 	enrichmentFIO.Patronymic = fio.Patronymic
 
+	e.log.Info("Попытка обратиться к api для получения age", slog.String("name", fio.Name))
 	age, err := e.router.EnrichmentAge(fio.Name)
 	if err != nil {
 		e.log.Error("при использовании api для обогащения age произошла ошибка",
@@ -94,6 +96,7 @@ func (e userService) EnrichmentAPI(fio User) (EnrichmentUser, error) {
 	e.log.Info("обогащение возрастом",
 		slog.Any("age", age.Age), slog.Any("после обогащения", enrichmentFIO))
 
+	e.log.Info("Попытка обратиться к api для получения gender", slog.String("name", fio.Name))
 	gender, err := e.router.EnrichmentGender(fio.Name)
 	if err != nil {
 		e.log.Error("при использовании api для обогащения gender произошла ошибка",
@@ -105,6 +108,7 @@ func (e userService) EnrichmentAPI(fio User) (EnrichmentUser, error) {
 	e.log.Info("обогащение полом",
 		slog.Any("gender", gender.Gender), slog.Any("после обогащения", enrichmentFIO))
 
+	e.log.Info("Попытка обратиться к api для получения nationality", slog.String("name", fio.Name))
 	nationality, err := e.router.EnrichmentNationality(fio.Name)
 	if err != nil {
 		e.log.Error("при использовании api для обогащения nationality произошла ошибка",
@@ -122,6 +126,7 @@ func (e userService) EnrichmentAPI(fio User) (EnrichmentUser, error) {
 }
 
 func (e userService) CheckUserExist(id int) (bool, error) {
+	e.log.Info("Попытка обратиться к бд для проверки пользователя на существование", slog.Int("id", id))
 	err := e.storage.UserExist(id)
 	if errors.Is(err, sql.ErrNoRows) {
 		e.log.Warn("пользователь не существует", slog.String("errs", err.Error()))
@@ -133,25 +138,27 @@ func (e userService) CheckUserExist(id int) (bool, error) {
 
 		return false, err
 	}
+	e.log.Info("Пользователь существует", slog.Int("id", id))
 
 	return true, nil
 }
 
 func (e userService) DeleteUser(id int) error {
+	e.log.Info("Попытка обратиться к бд для удаление пользователя", slog.Int("id", id))
 	err := e.storage.DeleteUser(id)
 	if err != nil {
 		e.log.Error("ошибка при удалении пользователя",
-			slog.String("errs", err.Error()), slog.Int("user_id", id))
+			slog.String("errs", err.Error()), slog.Int("id", id))
 
 		return err
 	}
-
-	e.log.Info("пользователь успешно удалён", slog.Int("user_id", id))
+	e.log.Info("пользователь успешно удалён", slog.Int("id", id))
 
 	return nil
 }
 
 func (e userService) ModifyUser(enrichmentFio EnrichmentUser) error {
+	e.log.Info("Попытка обратиться к бд для изменения пользователя", slog.Any("user_edit", enrichmentFio))
 	err := e.storage.EditUser(postgresdb.EnrichmentUser{
 		Id:          enrichmentFio.Id,
 		Name:        enrichmentFio.Name,
@@ -167,13 +174,13 @@ func (e userService) ModifyUser(enrichmentFio EnrichmentUser) error {
 
 		return err
 	}
-
 	e.log.Info("пользователь успешно изменён", slog.Int("user_id", enrichmentFio.Id))
 
 	return nil
 }
 
 func (e userService) GetFilteredUsers(filter Filter) ([]EnrichmentUser, error) {
+	e.log.Info("Попытка обратиться к бд для получение пользователей по фильтрам", slog.Any("filter", filter))
 	users, err := e.storage.FilteredUsers(postgresdb.Filter{
 		Name:        filter.Name,
 		Surname:     filter.Surname,
@@ -188,6 +195,7 @@ func (e userService) GetFilteredUsers(filter Filter) ([]EnrichmentUser, error) {
 
 		return nil, err
 	}
+	e.log.Info("пользователи успешно получены", slog.Any("user", users))
 
 	var us []EnrichmentUser
 	for _, value := range users {
@@ -206,6 +214,7 @@ func (e userService) GetFilteredUsers(filter Filter) ([]EnrichmentUser, error) {
 }
 
 func (e userService) PutInDatabase(enrichmentFio EnrichmentUser) error {
+	e.log.Info("Попытка обратиться к бд для добавления пользователя", slog.Any("user", enrichmentFio))
 	err := e.storage.Insert(postgresdb.EnrichmentUser{
 		Name:        enrichmentFio.Name,
 		Surname:     enrichmentFio.Surname,
@@ -220,7 +229,6 @@ func (e userService) PutInDatabase(enrichmentFio EnrichmentUser) error {
 
 		return err
 	}
-
 	e.log.Info("пользователь успешно добавлен", slog.Any("user", enrichmentFio))
 
 	return nil
