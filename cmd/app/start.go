@@ -13,15 +13,20 @@ import (
 	"test-task/internal/adapters/web"
 	"test-task/internal/controller/graphQL"
 	http2 "test-task/internal/controller/http"
-	"test-task/internal/controller/kafka"
 	"test-task/internal/domain/user"
 	"time"
 )
 
-func NewEnrichment(mux *http.ServeMux) {
-	l := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSource: true})).WithGroup("enrichment_domain")
+func NewUser(mux *http.ServeMux) {
+	l := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
+	postgres, err := db.ConnectToPostgres()
+	if err != nil {
+		fmt.Println(err)
 
-	storage := postgresdb.NewUserStorage(db.Connection, l)
+		return
+	}
+
+	storage := postgresdb.NewUserStorage(postgres, l)
 	router := web.NewRouter(l)
 
 	userService := user.NewUserService(storage, router, l)
@@ -29,10 +34,10 @@ func NewEnrichment(mux *http.ServeMux) {
 
 	srv := handler.NewDefaultServer(
 		graphQL.NewExecutableSchema(graphQL.Config{Resolvers: graphQL.NewUserResolver(userUseCase, l)}))
-	kafkaHandler := kafka.NewUserKafka(userUseCase, l)
+	//kafkaHandler := kafka.NewUserKafka(userUseCase, l)
 	httpHandler := http2.NewUserHandler(userUseCase, l)
 
-	go kafkaHandler.Start()
+	//go kafkaHandler.Start()
 	httpHandler.Register(mux)
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", srv)
@@ -43,7 +48,7 @@ func NewEnrichment(mux *http.ServeMux) {
 func Run(addr string) <-chan struct{} {
 	mux := http.NewServeMux()
 
-	NewEnrichment(mux)
+	NewUser(mux)
 
 	server := &http.Server{
 		Addr:         addr,

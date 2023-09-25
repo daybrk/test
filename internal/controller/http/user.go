@@ -13,6 +13,7 @@ type UseCase interface {
 	Enrichment(fio user.User) error
 	DeleteUser(id int) error
 	ModifyUser(enrichmentFio user.EnrichmentUser) error
+	Filter(filter user.Filter) ([]user.EnrichmentUser, error)
 }
 
 type Handler struct {
@@ -28,7 +29,7 @@ func (uh Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/add-user", uh.AddUser())
 	mux.HandleFunc("/delete-user", uh.DeleteUser())
 	mux.HandleFunc("/modify-user", uh.ModifyUser())
-	mux.HandleFunc("/get-users-with-filter", uh.AddUser())
+	mux.HandleFunc("/get-users-with-filter", uh.FilteredUsers())
 }
 
 func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +37,7 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 
 		var fio controller.User
 		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
-			uh.log.Error("не удалось получить данные с клиента", slog.String("err", err.Error()))
+			uh.log.Error("не удалось получить данные с клиента", slog.String("errs", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
@@ -50,7 +51,7 @@ func (uh Handler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 			Patronymic: fio.Patronymic,
 		})
 		if err != nil {
-			uh.log.Error("Ошибка", slog.String("err", err.Error()))
+			uh.log.Error("ошибка", slog.String("errs", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
@@ -67,7 +68,7 @@ func (uh Handler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 
 		id, err := strconv.Atoi(r.URL.Query().Get("id"))
 		if err != nil {
-			uh.log.Error("ошибка при конвертации id в int", slog.String("err", err.Error()))
+			uh.log.Error("ошибка при конвертации id в int", slog.String("errs", err.Error()))
 		}
 
 		if id == 0 {
@@ -79,25 +80,24 @@ func (uh Handler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 
 		err = uh.useCase.DeleteUser(id)
 		if err != nil {
-			uh.log.Error("ошибка при удалении пользователя", slog.String("err", err.Error()))
+			uh.log.Error("ошибка при удалении пользователя", slog.String("errs", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
 		}
 
-		uh.log.Info("Получилось")
+		uh.log.Info("Успешно")
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-// TODO
 func (uh Handler) ModifyUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var fio controller.ModifyUser
 		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
-			uh.log.Error("не удалось получить данные с клиента", slog.String("err", err.Error()))
+			uh.log.Error("не удалось получить данные с клиента", slog.String("errs", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
@@ -120,14 +120,51 @@ func (uh Handler) ModifyUser() func(w http.ResponseWriter, r *http.Request) {
 			Nationality: fio.Nationality,
 		})
 		if err != nil {
-			uh.log.Error("Ошибка", slog.String("err", err.Error()))
+			uh.log.Error("ошибка", slog.String("errs", err.Error()))
 			http.Error(w, "", http.StatusInternalServerError)
 
 			return
 		}
 
-		uh.log.Info("Получилось")
+		uh.log.Info("Успешно")
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func (uh Handler) FilteredUsers() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var fio controller.FilterUser
+		if err := json.NewDecoder(r.Body).Decode(&fio); err != nil {
+			uh.log.Error("не удалось получить данные с клиента", slog.String("errs", err.Error()))
+			http.Error(w, "", http.StatusInternalServerError)
+
+			return
+		}
+
+		result, err := uh.useCase.Filter(user.Filter{
+			Name:        fio.Name,
+			Surname:     fio.Surname,
+			Patronymic:  fio.Patronymic,
+			Age:         fio.Age,
+			Gender:      fio.Gender,
+			Nationality: fio.Nationality,
+		})
+		if err != nil {
+			uh.log.Error("Ошибка", slog.String("errs", err.Error()))
+			http.Error(w, "", http.StatusInternalServerError)
+
+			return
+		}
+
+		if err = json.NewEncoder(w).Encode(result); err != nil {
+			uh.log.Error("Ошибка", slog.String("errs", err.Error()))
+			http.Error(w, "", http.StatusInternalServerError)
+
+			return
+		}
+
+		uh.log.Info("Успешно")
 	}
 }

@@ -6,11 +6,29 @@ type DeleteUser struct {
 	ID int `json:"id"`
 }
 
+type Filter struct {
+	Name        *string  `json:"name,omitempty"`
+	Surname     *string  `json:"surname,omitempty"`
+	Patronymic  *string  `json:"patronymic,omitempty"`
+	Age         *int     `json:"age,omitempty"`
+	Gender      *string  `json:"gender,omitempty"`
+	Nationality []string `json:"nationality"`
+}
+
+type FilteredUsers struct {
+	Name        string   `json:"name"`
+	Surname     string   `json:"surname"`
+	Patronymic  *string  `json:"patronymic,omitempty"`
+	Age         int      `json:"age"`
+	Gender      string   `json:"gender"`
+	Nationality []string `json:"nationality"`
+}
+
 type ModifyUser struct {
 	ID          int      `json:"id"`
 	Name        string   `json:"name"`
 	Surname     string   `json:"surname"`
-	Patronymic  string   `json:"patronymic"`
+	Patronymic  *string  `json:"patronymic,omitempty"`
 	Age         int      `json:"age"`
 	Gender      string   `json:"gender"`
 	Nationality []string `json:"nationality"`
@@ -28,7 +46,7 @@ type ResultError struct {
 }
 
 type User struct {
-	Name       string `json:"name"`
-	Surname    string `json:"surname"`
-	Patronymic string `json:"patronymic"`
+	Name       string  `json:"name"`
+	Surname    string  `json:"surname"`
+	Patronymic *string `json:"patronymic,omitempty"`
 }

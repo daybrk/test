@@ -26,7 +26,7 @@ func GetConfig() *Config {
 }
 
 func (cnf *Config) load() {
-	cnf.loadCNF("../../configPostgres.json", &cnf.Postgres)
+	cnf.loadCNF("../../env/configPostgres.json", &cnf.Postgres)
 }
 
 func (cnf *Config) loadCNF(filename string, data interface{}) {

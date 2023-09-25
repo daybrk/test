@@ -3,10 +3,12 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/segmentio/kafka-go"
 	"log/slog"
 	"test-task/internal/controller"
 	"test-task/internal/domain/user"
+	"test-task/pkg/errs"
 )
 
 type UseCase interface {
@@ -31,14 +33,14 @@ func (k Kafka) Start() {
 	for {
 		message, err := reader.ReadMessage(context.Background())
 		if err != nil {
-			k.log.Warn("Не удалось прочитать сообщение", slog.String("err", err.Error()))
+			k.log.Warn("Не удалось прочитать сообщение", slog.String("errs", err.Error()))
 			continue
 		}
 
 		var fio controller.User
 		err = json.Unmarshal(message.Value, &fio)
 		if err != nil {
-			k.log.Warn("Не удалось unmarshal данных", slog.String("err", err.Error()))
+			k.log.Warn("Не удалось unmarshal данных", slog.String("errs", err.Error()))
 			continue
 		}
 
@@ -47,6 +49,14 @@ func (k Kafka) Start() {
 			Surname:    fio.Surname,
 			Patronymic: fio.Patronymic,
 		})
+		if errors.Is(err, errs.FioFailedErr) {
+			// Отправить ответное сообщение "FIOFAILED" в Kafka
+			err = k.sendResponseMessage("FIOFAILED")
+			if err != nil {
+				k.log.Warn("Не удалось отправить ответное сообщение", slog.String("errs", err.Error()))
+			}
+			continue
+		}
 		if err != nil {
 			k.log.Warn("Не удалось обогатить пользователя или добавить в базу")
 			continue
@@ -57,4 +67,26 @@ func (k Kafka) Start() {
 		reader.CommitMessages(context.Background(), message)
 	}
 
+}
+
+func (k Kafka) sendResponseMessage(response string) error {
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: []string{"localhost:9092"},
+		Topic:   "response-topic", // Замените на соответствующую тему для ответных сообщений
+	})
+
+	defer writer.Close()
+
+	message := kafka.Message{
+		Value: []byte(response),
+	}
+
+	err := writer.WriteMessages(context.Background(), message)
+	if err != nil {
+		k.log.Error(err.Error())
+
+		return err
+	}
+
+	return nil
 }

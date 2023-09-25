@@ -1,0 +1,4 @@
+{
+  "connect_string": "host= user= password= dbname=s sslmode=disable",
+  "port": "5432"
+}

@@ -24,7 +24,7 @@ func (gr router) EnrichmentAge(name string) (Age, error) {
 	var ageResp Age
 	err = json.NewDecoder(response.Body).Decode(&ageResp)
 	if err != nil {
-		gr.log.Info("Ошибка", slog.String("err", err.Error()))
+		gr.log.Info("Ошибка", slog.String("errs", err.Error()))
 		return Age{}, err
 	}
 	response.Body.Close()
@@ -41,7 +41,7 @@ func (gr router) EnrichmentGender(name string) (Gender, error) {
 	var gender Gender
 	err = json.NewDecoder(response.Body).Decode(&gender)
 	if err != nil {
-		gr.log.Info("Ошибка", slog.String("err", err.Error()))
+		gr.log.Info("Ошибка", slog.String("errs", err.Error()))
 		return Gender{}, err
 	}
 	response.Body.Close()
@@ -58,7 +58,7 @@ func (gr router) EnrichmentNationality(name string) (Nationality, error) {
 	var nationality Nationality
 	err = json.NewDecoder(response.Body).Decode(&nationality)
 	if err != nil {
-		gr.log.Info("Ошибка", slog.String("err", err.Error()))
+		gr.log.Info("Ошибка", slog.String("errs", err.Error()))
 		return Nationality{}, err
 	}
 	response.Body.Close()
@@ -69,7 +69,7 @@ func (gr router) EnrichmentNationality(name string) (Nationality, error) {
 func (gr router) request(value, urlString string) (*http.Response, error) {
 	requestURL, err := url.Parse(urlString)
 	if err != nil {
-		gr.log.Info("Ошибка при парсинге базового URL:", slog.String("err", err.Error()))
+		gr.log.Info("Ошибка при парсинге базового URL:", slog.String("errs", err.Error()))
 		return nil, nil
 	}
 
@@ -79,7 +79,7 @@ func (gr router) request(value, urlString string) (*http.Response, error) {
 
 	response, err := http.Get(requestURL.String())
 	if err != nil {
-		gr.log.Info("Ошибка при выполнении GET-запроса:", slog.String("err", err.Error()))
+		gr.log.Info("Ошибка при выполнении GET-запроса:", slog.String("errs", err.Error()))
 		return nil, nil
 	}
 

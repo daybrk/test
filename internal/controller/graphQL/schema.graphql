@@ -1,7 +1,7 @@
 input User  {
     name   :     String!
     surname :    String!
-    patronymic:  String!
+    patronymic:  String
 }
 
 input DeleteUser  {
@@ -12,7 +12,25 @@ input ModifyUser  {
     id:         Int!
     name:       String!
     surname:    String!
-    patronymic:   String!
+    patronymic:   String
+    age:    Int!
+    gender:    String!
+    nationality:  [String!]!
+}
+
+input Filter  {
+    name:       String
+    surname:    String
+    patronymic:   String
+    age:    Int
+    gender:    String
+    nationality:  [String!]!
+}
+
+type FilteredUsers {
+    name:       String!
+    surname:    String!
+    patronymic:   String
     age:    Int!
     gender:    String!
     nationality:  [String!]!
@@ -33,4 +51,8 @@ type Mutation {
     addUser(input: User!): Result!
     deleteUser(input: DeleteUser!): Result!
     modifyUser(input: ModifyUser!): Result!
+}
+
+type Query {
+    getUsers(input: Filter!): [FilteredUsers]!
 }
