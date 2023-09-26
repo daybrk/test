@@ -1,13 +1,11 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 )
 
 func main() {
-	webPort := flag.Int("p", 8082, "порт веб сервера")
-	done := Run(fmt.Sprintf(":%d", *webPort))
+	done := Run(fmt.Sprintf(":%d", 8082))
 	fmt.Println("START")
 	<-done
 }
